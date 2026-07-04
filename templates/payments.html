@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Payments{% endblock %}
+{% block page_title %}Payment Processing{% endblock %}
+{% block page_subtitle %}Process customer invoices, trace payments, and verify auto-paid triggers{% endblock %}
+
+{% block content %}
+<div class="dashboard-details-grid">
+    <!-- Left Panel: Payments History Ledger -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-list-check"></i> Payment History Ledger</h3>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Payment ID</th>
+                            <th style="width: 80px;">Order ID</th>
+                            <th>Customer Name</th>
+                            <th class="text-right">Amount Paid</th>
+                            <th>Payment Method</th>
+                            <th>Date Recorded</th>
+                            {% if session.get('role') == 'ADMIN' %}
+                                <th class="text-center" style="width: 80px;">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if payments %}
+                            {% for payment in payments %}
+                                <tr>
+                                    <td><code>#{{ payment.payment_id }}</code></td>
+                                    <td><code>#{{ payment.order_id }}</code></td>
+                                    <td class="font-semibold">{{ payment.customer_name }}</td>
+                                    <td class="text-right font-semibold" style="color: var(--color-success);">${{ "{:,.2f}".format(payment.total_amount) }}</td>
+                                    <td>
+                                        <span class="badge paid">
+                                            <i class="fa-solid fa-credit-card" style="margin-right: 4px;"></i>
+                                            {{ payment.payment_method }}
+                                        </span>
+                                    </td>
+                                    <td class="timestamp-td">{{ payment.payment_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    {% if session.get('role') == 'ADMIN' %}
+                                        <td class="text-center">
+                                            <form action="{{ url_for('delete_payment', payment_id=payment.payment_id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this payment record? This does NOT revert order status automatically.');">
+                                                <button type="submit" class="btn btn-icon btn-danger btn-sm">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="{% if session.get('role') == 'ADMIN' %}7{% else %}6{% endif %}" class="no-data">
+                                    <i class="fa-solid fa-money-bill-transfer"></i>
+                                    <p>No payments recorded in the system database yet.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Record New Payment (Invoicing Trigger Verification) -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-cash-register"></i> Process Payment</h3>
+        </div>
+        <div class="card-body">
+            <p style="font-size:11.5px; color: var(--text-muted); line-height:1.5; margin-bottom:15px;">
+                <i class="fa-solid fa-circle-info"></i> <strong>Operational Note:</strong>
+                Submitting a payment record will instantly transition the corresponding order status to <code>PAID</code> and generate a system transaction receipt.
+            </p>
+            
+            {% if unpaid_orders %}
+                <form action="{{ url_for('create_payment') }}" method="POST">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="order_id">Choose Pending Order</label>
+                        <select id="order_id" class="form-control" name="order_id" required>
+                            <option value="" disabled selected>-- Select Pending Order --</option>
+                            {% for order in unpaid_orders %}
+                                <option value="{{ order.order_id }}">Order #{{ order.order_id }} - {{ order.customer_name }} (${{ order.total_amount }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label for="payment_method">Payment Method</label>
+                        <select id="payment_method" class="form-control" name="payment_method" required>
+                            <option value="CASH" selected>Cash</option>
+                            <option value="CREDIT_CARD">Credit Card</option>
+                            <option value="DEBIT_CARD">Debit Card</option>
+                            <option value="PAYPAL">PayPal</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <span>Submit & Verify Trigger</span>
+                    </button>
+                </form>
+            {% else %}
+                <div class="inventory-status-ok" style="padding: 15px 0;">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <h4>All Invoices Paid</h4>
+                    <p style="font-size: 11px;">No pending orders with invoice totals > $0 exist.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

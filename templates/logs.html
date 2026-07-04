@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs{% endblock %}
+{% block page_title %}Database Audit Logs{% endblock %}
+{% block page_subtitle %}Real-time audit logs of store database actions{% endblock %}
+
+{% block content %}
+<div class="card table-card">
+    <div class="card-header table-header">
+        <h3><i class="fa-solid fa-terminal text-primary"></i> Database Audit Logs Ledger</h3>
+        <span class="badge admin"><i class="fa-solid fa-shield"></i> Security Log</span>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Log ID</th>
+                        <th style="width: 150px;">Action Type</th>
+                        <th>Log Audit Message</th>
+                        <th style="width: 200px;">Date Logged</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if logs %}
+                        {% for log in logs %}
+                            <tr>
+                                <td><code>#{{ log.log_id }}</code></td>
+                                <td>
+                                    {% if 'Stock' in log.action_type or 'STOCK' in log.action_type %}
+                                        <span class="action-badge stock_reduced">STOCK_UPDATE</span>
+                                    {% elif 'Payment' in log.action_type or 'PAYMENT' in log.action_type or 'PAID' in log.action_type %}
+                                        <span class="action-badge order_paid">PAYMENT_RECORD</span>
+                                    {% else %}
+                                        <span class="action-badge" style="background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #475569;">{{ log.action_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-family: monospace; font-size: 12.5px; color: var(--text-light);">
+                                    {{ log.description }}
+                                </td>
+                                <td class="timestamp-td">
+                                    {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="no-data">
+                                <i class="fa-solid fa-terminal"></i>
+                                <p>No audit logs recorded in the ledger yet. Add orders and payments to generate logs.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

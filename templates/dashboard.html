@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block page_subtitle %}Shop Metrics and Database Health{% endblock %}
+
+{% block content %}
+<!-- Metric Cards Grid -->
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-icon customers">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Total Customers</span>
+            <span class="stat-value">{{ stats.customers_count }}</span>
+            <span class="stat-trend">Registered Profiles</span>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon products">
+            <i class="fa-solid fa-box"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Total Products</span>
+            <span class="stat-value">{{ stats.products_count }}</span>
+            <span class="stat-trend">Inventory Items</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon orders">
+            <i class="fa-solid fa-receipt"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Total Orders</span>
+            <span class="stat-value">{{ stats.orders_count }}</span>
+            <span class="stat-trend">Transactions Placed</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon revenue">
+            <i class="fa-solid fa-dollar-sign"></i>
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Total Sales Revenue</span>
+            <span class="stat-value">${{ "{:,.2f}".format(stats.total_sales) }}</span>
+            <span class="stat-trend">Paid Orders Total</span>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Widgets Section -->
+<div class="dashboard-details-grid">
+    <!-- Left Panel: Quick Actions & Status -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-bolt text-primary"></i> Store Operations Portal</h3>
+        </div>
+        <div class="card-body">
+            <p style="line-height: 1.6; margin-bottom: 20px; color: var(--text-muted);">
+                Welcome to the OracleShop Manager administration portal. Access your core management links and operational shortcuts below:
+            </p>
+            
+            <div class="quick-actions-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                <a href="{{ url_for('customers') }}" class="btn btn-primary" style="text-align: center; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-weight: 600; text-decoration: none; border-radius: 8px; background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover)); border: none; color: #ffffff;">
+                    <i class="fa-solid fa-user-plus" style="font-size: 20px;"></i>
+                    <span>Customers Portal</span>
+                </a>
+                <a href="{{ url_for('products') }}" class="btn btn-primary" style="text-align: center; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-weight: 600; text-decoration: none; border-radius: 8px; background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-hover)); border: none; color: #ffffff;">
+                    <i class="fa-solid fa-boxes-stacked" style="font-size: 20px;"></i>
+                    <span>Product Catalog</span>
+                </a>
+                <a href="{{ url_for('orders') }}" class="btn btn-primary" style="text-align: center; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-weight: 600; text-decoration: none; border-radius: 8px; background: linear-gradient(135deg, var(--color-warning), #e67e22); border: none; color: #ffffff;">
+                    <i class="fa-solid fa-cart-plus" style="font-size: 20px;"></i>
+                    <span>Manage Orders</span>
+                </a>
+                <a href="{{ url_for('payments') }}" class="btn btn-primary" style="text-align: center; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-weight: 600; text-decoration: none; border-radius: 8px; background: linear-gradient(135deg, var(--color-success), #27ae60); border: none; color: #ffffff;">
+                    <i class="fa-solid fa-file-invoice-dollar" style="font-size: 20px;"></i>
+                    <span>Process Payments</span>
+                </a>
+            </div>
+
+            <div class="system-health-panel" style="padding: 15px; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="status-dot online" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: var(--color-success); box-shadow: 0 0 8px var(--color-success);"></span>
+                    <span style="font-weight: 500; font-size: 13px;">Database Link Status</span>
+                </div>
+                <span style="font-size: 12px; color: var(--text-muted); font-family: monospace;">Oracle XE Thin Mode</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Low Stock Alert List -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-triangle-exclamation" style="color: var(--color-warning);"></i> Low Stock Alerts</h3>
+        </div>
+        <div class="card-body">
+            {% if stats.low_stock_list %}
+                <ul class="low-stock-ul">
+                    {% for item in stats.low_stock_list %}
+                        <li class="low-stock-li">
+                            <span class="low-stock-name">{{ item.product_name }}</span>
+                            <span class="low-stock-qty">{{ item.stock }} left</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="inventory-status-ok">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <h4>Stock Levels Normal</h4>
+                    <p>All items have sufficient inventory quantities.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
